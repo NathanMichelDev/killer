@@ -1,4 +1,5 @@
 *secret.json
 */secret.toml
+*/secrets.toml
 json_to_toml.py
 *.pyc
