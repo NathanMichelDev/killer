@@ -6,21 +6,19 @@ from kill import create_kill, get_player_kills
 import time
 
 if "player" not in st.session_state:
-    player_choice = st.radio(
+    st.sidebar.title("Compte joueur")
+    player_choice = st.sidebar.radio(
         "What do you want to do?",
-        ("Create a player", "Load a player"),
+        ("Me connecter", "Créer un compte"),
         key="player_choice",
         horizontal=True,
+        label_visibility="collapsed",
     )
-    if player_choice == "Create a player":
-        columns = st.columns(3)
-        with columns[0]:
-            player_name = st.text_input("Enter your name")
-        with columns[1]:
-            player_email = st.text_input("Enter your email")
-        with columns[2]:
-            player_password = st.text_input("Enter your password", type="password")
-        if st.button("Create player"):
+    if player_choice == "Créer un compte":
+        player_name = st.sidebar.text_input("Nom de joueur")
+        player_email = st.sidebar.text_input("Email")
+        player_password = st.sidebar.text_input("Mot de passe", type="password")
+        if st.sidebar.button("Créer un joueur"):
             if (player_name) and (player_email) and (player_password):
                 try:
                     player = create_player(
@@ -29,43 +27,40 @@ if "player" not in st.session_state:
                         player_password=player_password,
                     )
                     st.session_state.player = player
-                    st.success("Player created")
+                    st.sidebar.success("Joueur créé ! Connexion ...")
                     st.session_state.player.greetings()
                     time.sleep(2)
                     st.experimental_rerun()
                 except Exception as e:
                     if "Email already taken" in str(e):
-                        st.error("You have already registered with this email")
+                        st.sidebar.error("L'email est déjà utilisé")
                     elif "Name already taken" in str(e):
-                        st.error("Name already taken")
+                        st.sidebar.error("Le nom de joueur est déjà utilisé")
                     else:
-                        st.error(f"UNKNOWN ERROR: {e}")
+                        st.sidebar.error(f"Erreur inconnue, contactez le support: {e}")
             else:
-                st.error("Please enter a player name and an email")
-    elif player_choice == "Load a player":
-        columns = st.columns(2)
-        with columns[0]:
-            player_email = st.text_input("Enter your email")
-        with columns[1]:
-            player_password = st.text_input("Enter your password", type="password")
-        if st.button("Load my player"):
+                st.sidebar.error("Entrez un nom, un email et un mot de passe.")
+    elif player_choice == "Me connecter":
+        player_email = st.sidebar.text_input("Enter your email")
+        player_password = st.sidebar.text_input("Enter your password", type="password")
+        if st.sidebar.button("Load my player"):
             if (player_email) and (player_password):
                 try:
                     player = load_player(
                         player_email=player_email, player_password=player_password
                     )
                     st.session_state.player = player
-                    st.success("Player loaded")
+                    st.sidebar.success("Connexion réussie !")
                     st.session_state.player.greetings()
                     time.sleep(2)
                     st.experimental_rerun()
                 except Exception as e:
                     if "Incorrect password" in str(e):
-                        st.error("Incorrect password")
+                        st.sidebar.error("Incorrect password")
                     else:
-                        st.error(f"UNKNOWN ERROR: {e}")
+                        st.sidebar.error(f"UNKNOWN ERROR: {e}")
             else:
-                st.error("Please enter an email and a password")
+                st.sidebar.error("Please enter an email and a password")
     st.stop()
 
 player = st.session_state.player
