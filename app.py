@@ -1,136 +1,35 @@
 import streamlit as st
-from game import create_game
-from player import create_player, load_player
-from game import soft_load_game
+from login import user_login, game_login
 from kill import create_kill, get_player_kills
-import time
+
+if "sidebar_state" not in st.session_state:
+    st.session_state.sidebar_state = "expanded"
+
+st.set_page_config(initial_sidebar_state=st.session_state.sidebar_state)
 
 if "player" not in st.session_state:
-    st.sidebar.title("Compte joueur")
-    player_choice = st.sidebar.radio(
-        "What do you want to do?",
-        ("Me connecter", "Créer un compte"),
-        key="player_choice",
-        horizontal=True,
-        label_visibility="collapsed",
-    )
-    if player_choice == "Créer un compte":
-        player_name = st.sidebar.text_input("Nom de joueur")
-        player_email = st.sidebar.text_input("Email")
-        player_password = st.sidebar.text_input("Mot de passe", type="password")
-        if st.sidebar.button("Créer un joueur"):
-            if (player_name) and (player_email) and (player_password):
-                try:
-                    player = create_player(
-                        player_name=player_name,
-                        player_email=player_email,
-                        player_password=player_password,
-                    )
-                    st.session_state.player = player
-                    st.sidebar.success("Joueur créé ! Connexion ...")
-                    st.session_state.player.greetings()
-                    time.sleep(2)
-                    st.experimental_rerun()
-                except Exception as e:
-                    if "Email already taken" in str(e):
-                        st.sidebar.error("L'email est déjà utilisé")
-                    elif "Name already taken" in str(e):
-                        st.sidebar.error("Le nom de joueur est déjà utilisé")
-                    else:
-                        st.sidebar.error(f"Erreur inconnue, contactez le support: {e}")
-            else:
-                st.sidebar.error("Entrez un nom, un email et un mot de passe.")
-    elif player_choice == "Me connecter":
-        player_email = st.sidebar.text_input("Enter your email")
-        player_password = st.sidebar.text_input("Enter your password", type="password")
-        if st.sidebar.button("Load my player"):
-            if (player_email) and (player_password):
-                try:
-                    player = load_player(
-                        player_email=player_email, player_password=player_password
-                    )
-                    st.session_state.player = player
-                    st.sidebar.success("Connexion réussie !")
-                    st.session_state.player.greetings()
-                    time.sleep(2)
-                    st.experimental_rerun()
-                except Exception as e:
-                    if "Incorrect password" in str(e):
-                        st.sidebar.error("Incorrect password")
-                    else:
-                        st.sidebar.error(f"UNKNOWN ERROR: {e}")
-            else:
-                st.sidebar.error("Please enter an email and a password")
+    user_login()
     st.stop()
+else:
+    with st.sidebar:
+        if st.button("Me déconnecter"):
+            st.session_state.pop("player")
+            st.session_state.pop("sidebar_state")
+            if "game" in st.session_state:
+                st.session_state.pop("game")
+            st.experimental_rerun()
 
 player = st.session_state.player
 
 if "game" not in st.session_state:
-    player.greetings()
-    st.header("What do you want to do?")
-    game_choice = st.radio(
-        "",
-        ("Load an existing game", "Join a game", "Create a game"),
-        key="game_choice",
-        horizontal=True,
-        label_visibility="collapsed",
-    )
-    if game_choice == "Load an existing game":
-        games = player.find_joined_games()
-        if games:
-            st.write(f"You are currently registered in {len(games)} game(s).")
-            for game in games:
-                # st.write(game.to_dict())
-                g = soft_load_game(game)
-                g.st_describe()
-                g.st_ask_to_load()
-        else:
-            st.warning("You are not registered in any games.")
-    if game_choice == "Join a game":
-        game_name = st.text_input("Filter by game name")
-        games = player.find_joinable_games(filter_name=game_name)
-        st.write(f"There are {len(games)} game(s) that you have not yet joined.")
-        for game in games:
-            # st.write(game.to_dict())
-            g = soft_load_game(game)
-            g.st_describe()
-            g.st_ask_to_join(player)
-    elif game_choice == "Create a game":
-        st.title("Create a game")
-        cols = st.columns(3)
-        with cols[0]:
-            game_name = st.text_input(
-                "Enter the game name",
-                key="game_name",
-                label_visibility="visible",
-            )
-        with cols[1]:
-            game_description = st.text_input(
-                "Enter the game description",
-                key="game_description",
-                label_visibility="visible",
-            )
-        if st.button("Create game"):
-            if game_name and game_description:
-                try:
-                    game = create_game(game_name, game_description, player)
-                    st.success("Game created")
-                    st.session_state.game = game
-                    time.sleep(2)
-                    st.experimental_rerun()
-                except Exception as e:
-                    if "Game name already taken" in str(e):
-                        st.error("Game name already taken")
-                    else:
-                        st.error("UNKNOWN ERROR:")
-                        st.write(e)
-            else:
-                st.error("Please enter a game name and description")
+    game_login(player)
     st.stop()
+else:
+    with st.sidebar:
+        if st.button("Quitter la partie"):
+            st.session_state.pop("game")
+            st.experimental_rerun()
 
-# if st.button("Unload game"):
-#     st.session_state.pop("game")
-#     st.experimental_rerun()
 
 game = st.session_state.game
 game.st_describe()
@@ -144,7 +43,7 @@ if game.state == "pending":
     )
     nb_game_kills = len(game.get_kills())
     if nb_game_kills == 0:
-        st.error(f"Il n'y a pas encore de kills proposés")
+        st.error(f"Aucun kill n'a été proposé pour le moment.")
     elif nb_game_kills < 5:
         st.warning(f"Il y a actuellement {nb_game_kills} kills proposés")
     elif nb_game_kills < 10:

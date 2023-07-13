@@ -49,8 +49,7 @@ class Game(BaseModel):
         )
 
     def st_describe(self):
-        st.title(f"La partie")
-        st.header(f"{self.name}")
+        st.title(f"{self.name}")
         st.write(f"Description: {self.description}")
         st.write(f"Joueurs acceptés: " + ", ".join(self.player_names))
         st.write(
@@ -59,19 +58,15 @@ class Game(BaseModel):
         st.write(f"Administrateur de la partie: {self.admin}")
         st.write(f"Statut de la partie: {translated_state[self.state]}")
 
-    def st_ask_to_load(self):
-        if st.button("Load game", key="Load game" + self.name):
-            st.session_state.game = self
-            st.experimental_rerun()
-
     def st_ask_to_join(self, player: Player):
         if player.name not in self.pending_player_names:
-            if st.button("Ask to join the game", key="ask_to_join" + self.name):
+            if st.button(
+                "Demander à rejoindre la partie", key="ask_to_join" + self.name
+            ):
                 self.add_pending_player(player)
                 st.experimental_rerun()
-
         else:
-            st.warning("You have already asked to join this game.")
+            st.warning("Tu as déjà demandé à rejoindre cette partie.")
 
     def ask_to_leave(self):
         st.write("Are you sure you want to leave the game?")

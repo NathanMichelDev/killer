@@ -29,13 +29,12 @@ def create_player(player_name: str, player_email: str, player_password: str):
     player = Player(
         name=player_name,
         email=player_email,
-        password=player_password,
     )
     fb_client.collection("player").document(player.name).set(
         {
             "name": player.name,
             "email": player.email,
-            "password": player.password,
+            "password": player_password,
         }
     )
     return player
@@ -49,7 +48,6 @@ def load_player(player_email: str, player_password: str):
             return Player(
                 name=player["name"],
                 email=player["email"],
-                password=player["password"],
             )
         else:
             raise Exception("Incorrect password")
@@ -62,7 +60,6 @@ class Player(BaseModel):
     name: str
 
     email: str
-    password: str
 
     def find_joined_games(self) -> List:
         games = (
@@ -89,7 +86,7 @@ class Player(BaseModel):
         return fb_client.collection("kill").where("author", "==", self.name).get()
 
     def greetings(self):
-        st.header(f"Salut {self.name} !")
+        st.header(f"Bienvenue {self.name} !")
 
     def __str__(self):
         return f"Player: {self.name} ({self.email})"
